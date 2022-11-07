@@ -7,16 +7,19 @@ from argparse import ArgumentParser
 import glob
 import os
 import time
+import re
 # %%
 parser = ArgumentParser()
 
 parser.add_argument("--input")
 parser.add_argument("--output")
+parser.add_argument("--base")
 
 args = parser.parse_args()
 
 folder_script = args.input
 result_path = args.output
+base_url = args.base
 
 if folder_script is None or result_path is None:
     print("Not Empty Folder input or output")
@@ -100,10 +103,21 @@ def handle_automation(sheet, bot):
             else:
                 sheet['result'][i] = False
                 sheet['message'][i] = "Not Matched"
+                break
+        elif type_action == "url":
+            uri = re.sub(base_url, "", bot.current_url)
+            if sheet.iloc[i][1] == uri:
+                sheet['result'][i] = True
+                sheet['message'][i] = "Success"
+            else:
+                sheet['result'][i] = False
+                sheet['message'][i] = "Url Not Matched"
+                break
     return sheet
 # %%
 def file_handle(input_path, result_path, file, bot):
     writer = pd.ExcelWriter(result_path, engine='openpyxl')
+    print(file)
     for sheet_name in file.sheet_names:
         sheet = pd.read_excel(input_path, sheet_name=sheet_name)
         sheet['result'] = False
@@ -112,31 +126,20 @@ def file_handle(input_path, result_path, file, bot):
         sheet.to_excel(writer, sheet_name=sheet_name, index=None)
     writer.close()
 # %%
-files = glob.glob(f"{folder_script}/*.xlsx")
+files = glob.glob(f"./{folder_script}/*.xlsx")
 # %%
 bot = webdriver.Chrome()
 # %%
 for path in files:
     name = os.path.basename(path).split('.')[0]
     file_name_output = f'{result_path}/{name}_result.xlsx'
+    print(name)
     file = pd.ExcelFile(path)
     file_handle(path, file_name_output, file, bot)
 bot.close()
-# %%
 
-# %%
 
-# %%
 
-# %%
-
-# %%
-
-# %%
-
-# %%
-
-# %%
 
 # %%
 
